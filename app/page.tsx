@@ -27,7 +27,7 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <ThemeSwitcher />
                 <Suspense fallback={<div className="w-20 h-8 bg-muted animate-pulse" />}>
-                  <AuthButton />
+                  <AuthButton hideDashboardLink />
                 </Suspense>
               </div>
             </div>
@@ -36,7 +36,9 @@ export default function Home() {
 
         {/* Hero Section */}
         <div className="w-full max-w-6xl px-6">
-          <Hero />
+          <Suspense fallback={<div className="w-full h-[400px] bg-muted/10 animate-pulse rounded-none" />}>
+            <Hero />
+          </Suspense>
           
           {/* Main Content Area */}
           <section id="features" className="py-24 grid md:grid-cols-3 gap-8">
