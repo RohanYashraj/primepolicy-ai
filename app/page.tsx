@@ -1,12 +1,13 @@
 import { AuthButton } from "@/components/auth-button";
 import { Hero } from "@/components/hero";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
 import { Suspense } from "react";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center bg-background selection:bg-primary selection:text-primary-foreground">
+    <main className="min-h-screen flex flex-col items-center bg-background selection:bg-primary selection:text-primary-foreground font-sans">
       <div className="flex-1 w-full flex flex-col items-center relative">
         {/* Navigation */}
         <nav className="w-full flex justify-center border-b border-border h-16 sticky top-0 bg-background/80 backdrop-blur-md z-50">
@@ -15,13 +16,20 @@ export default function Home() {
               <span className="bg-primary text-primary-foreground px-2 py-0.5 uppercase tracking-[0.1em]">PrimePolicy</span>
             </Link>
             
-            <div className="flex items-center gap-6">
-              <Link href="#features" className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-primary pt-1">Features</Link>
-              <Link href="#docs" className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-primary pt-1">Docs</Link>
-              <div className="h-4 w-px bg-border mx-2" />
-              <Suspense fallback={<div className="w-20 h-8 bg-muted animate-pulse" />}>
-                <AuthButton />
-              </Suspense>
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-6 mr-4">
+                <Link href="#features" className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-primary pt-1">Features</Link>
+                <Link href="#docs" className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground hover:text-primary pt-1">Docs</Link>
+              </div>
+              
+              <div className="h-4 w-px bg-border/50 hidden md:block" />
+              
+              <div className="flex items-center gap-2">
+                <ThemeSwitcher />
+                <Suspense fallback={<div className="w-20 h-8 bg-muted animate-pulse" />}>
+                  <AuthButton />
+                </Suspense>
+              </div>
             </div>
           </div>
         </nav>
