@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "./logout-button";
 
-export async function AuthButton() {
+export async function AuthButton({ hideDashboardLink = false }: { hideDashboardLink?: boolean }) {
   const supabase = await createClient();
 
   // You can also use getUser() which will be slower.
@@ -13,6 +13,12 @@ export async function AuthButton() {
 
   return user ? (
     <div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+      {!hideDashboardLink && (
+        <>
+          <Link href="/dashboard" className="text-primary hover:underline font-bold">Dashboard</Link>
+          <div className="h-3 w-px bg-border/50" />
+        </>
+      )}
       {user.email}
       <LogoutButton />
     </div>
