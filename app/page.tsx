@@ -12,8 +12,7 @@ export default function Home() {
         <nav className="w-full flex justify-center border-b border-border h-16 sticky top-0 bg-background/80 backdrop-blur-md z-50">
           <div className="w-full max-w-6xl flex justify-between items-center px-6">
             <Link href="/" className="font-mono font-bold text-xl tracking-tighter flex items-center gap-2 group">
-              <span className="bg-primary text-primary-foreground px-1.5 py-0.5">P</span>
-              <span className="group-hover:text-primary transition-colors">PRIMEPOLICY-AI</span>
+              <span className="bg-primary text-primary-foreground px-2 py-0.5 uppercase tracking-[0.1em]">PrimePolicy</span>
             </Link>
             
             <div className="flex items-center gap-6">

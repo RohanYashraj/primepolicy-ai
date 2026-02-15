@@ -40,7 +40,7 @@ export function UpdatePasswordForm({
     <div className={cn("flex flex-col gap-8", className)} {...props}>
       <div className="flex flex-col items-center gap-2 mb-4">
         <Link href="/" className="font-mono font-bold text-2xl tracking-tighter flex items-center gap-2 mb-2">
-          <span className="bg-primary text-primary-foreground px-2 py-1">P</span>
+          <span className="bg-primary text-primary-foreground px-3 py-1 uppercase tracking-[0.1em]">PrimePolicy</span>
         </Link>
         <h1 className="text-2xl font-mono font-bold uppercase tracking-widest text-shadow-industrial text-center">Update Password</h1>
         <p className="text-xs text-muted-foreground font-mono uppercase tracking-tight">Set your new password below</p>
