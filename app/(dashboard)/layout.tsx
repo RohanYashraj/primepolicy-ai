@@ -2,20 +2,7 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { Navbar } from "@/components/dashboard/navbar";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { AuthButton } from "@/components/auth-button";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
-
-async function ProtectedContent({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-
-  if (!data?.claims) {
-    return redirect("/auth/login");
-  }
-
-  return <>{children}</>;
-}
 
 export default async function DashboardLayout({
   children,
@@ -36,7 +23,7 @@ export default async function DashboardLayout({
         <main className="flex-1 overflow-y-auto p-6 scrollbar-industrial">
           <div className="max-w-7xl mx-auto w-full">
             <Suspense fallback={<div className="w-full h-32 bg-muted/20 animate-pulse rounded-none" />}>
-              <ProtectedContent>{children}</ProtectedContent>
+              {children}
             </Suspense>
           </div>
         </main>
