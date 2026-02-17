@@ -1,16 +1,17 @@
 import { SchemaGuardianAgent } from "./schema-guardian";
-import { ProductMetadataAgent } from "./product-metadata";
-import { CoverageBenefitsAgent } from "./coverage-benefits";
-import { PremiumPaymentAgent } from "./premium-payment";
-import { LifecycleRulesAgent } from "./lifecycle-rules";
-import { FinancialOperationsAgent } from "./financial-operations";
-import { UnderwritingRulesAgent } from "./underwriting-rules";
-import { ExclusionsLimitationsAgent } from "./exclusions-limitations";
-import { ComplianceRegulatoryAgent } from "./compliance-regulatory";
-import { ValidationAuditAgent } from "./validation-audit";
+import { IdentityAgent } from "./identity-agent";
+import { EligibilityAgent } from "./eligibility-agent";
+import { BenefitLogicAgent } from "./benefit-logic";
+import { PricingAgent } from "./pricing-agent";
+import { LifecycleAgent } from "./lifecycle-agent";
+import { UnderwritingAgent } from "./underwriting-agent";
+import { ExclusionAgent } from "./exclusion-agent";
+import { ClaimsAgent } from "./claims-agent";
+import { ComplianceAgent } from "./compliance-agent";
+import { AuditIntegrityAgent } from "./audit-integrity";
 import { addDocumentSections, clearDocumentSections } from "../vector-store";
 import { BaseAgent, AgentResponse } from "./base";
-import { PAS_EXECUTABLE_SCHEMA } from "./schema";
+import { DEFINITIVE_PAS_SCHEMA } from "./schema";
 
 export class AgentOrchestrator {
     private agents: BaseAgent[] = [];
@@ -18,15 +19,16 @@ export class AgentOrchestrator {
     constructor() {
         this.agents = [
             new SchemaGuardianAgent(),
-            new ProductMetadataAgent(),
-            new CoverageBenefitsAgent(),
-            new PremiumPaymentAgent(),
-            new LifecycleRulesAgent(),
-            new FinancialOperationsAgent(),
-            new UnderwritingRulesAgent(),
-            new ExclusionsLimitationsAgent(),
-            new ComplianceRegulatoryAgent(),
-            new ValidationAuditAgent(),
+            new IdentityAgent(),
+            new EligibilityAgent(),
+            new BenefitLogicAgent(),
+            new PricingAgent(),
+            new LifecycleAgent(),
+            new UnderwritingAgent(),
+            new ExclusionAgent(),
+            new ClaimsAgent(),
+            new ComplianceAgent(),
+            new AuditIntegrityAgent(), // Not functional in extraction but handles integrity reporting
         ];
     }
 
@@ -60,10 +62,10 @@ export class AgentOrchestrator {
     }
 
     public async executeExtraction(documentId: string): Promise<any> {
-        console.log(`[ORCHESTRATOR] Starting PAS-executable extraction for: ${documentId}`);
+        console.log(`[ORCHESTRATOR] Starting definitive PAS extraction for: ${documentId}`);
         const results = await Promise.all(this.agents.map(agent => agent.run(documentId)));
 
-        const consolidatedData: any = JSON.parse(JSON.stringify(PAS_EXECUTABLE_SCHEMA));
+        const consolidatedData: any = JSON.parse(JSON.stringify(DEFINITIVE_PAS_SCHEMA));
 
         results.forEach(res => {
             if (res.status === "success" && res.data) {
