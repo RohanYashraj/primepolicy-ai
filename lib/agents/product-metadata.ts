@@ -1,27 +1,29 @@
 import { BaseAgent, AgentResponse } from "./base";
-import { CANONICAL_MASTER_SCHEMA } from "./schema";
+import { PAS_EXECUTABLE_SCHEMA } from "./schema";
 
 export class ProductMetadataAgent extends BaseAgent {
-    public name = "Product Metadata Agent";
-    public description = "Extracts product identity, jurisdiction, currency, and versioning.";
+    public name = "PAS Metadata Agent";
+    public description = "Extracts PAS-ready product identification, identity attributes, and eligibility rules.";
 
     public async run(documentId: string): Promise<AgentResponse> {
         try {
-            const context = await this.getContext("Extract product name, carrier, LOB, version, market segment, governing laws, admitted status, territory, and currency.");
+            const context = await this.getContext("Extract product name, version label, LOB, carrier, currency, jurisdiction, entry/expiry ages, residency, and sum assured bounds.");
 
-            const prompt = `Extract product identification and regulatory meta-data.
-            Provide machine-enforceable fields:
-            - Name, Carrier, LOB Code, Version ID, Market Segment.
-            - Governing Laws (list), Admitted Status (boolean), Territory Scope (ISO codes).
-            - Currency (ISO 4217), Rounding Rules.
-            Translate findings into structured data. Never paraphrase.`;
+            const prompt = `Extract product context and eligibility rules.
+            - product_context: canonical_id, version_label, lob_code, carrier_entity, currency_iso, jurisdiction_code.
+            - eligibility_rules: age_entry (min/max), age_expiry (max), residency_status, occupation_classes, sum_assured bounds.
+            Strict machine-readable types only. No narrative.`;
 
-            const schema = JSON.stringify(CANONICAL_MASTER_SCHEMA.product_metadata, null, 2);
+            const schema = JSON.stringify({
+                product_context: PAS_EXECUTABLE_SCHEMA.product_context,
+                eligibility_rules: PAS_EXECUTABLE_SCHEMA.eligibility_rules
+            }, null, 2);
+
             const data = await this.extract<any>(context, prompt, schema);
 
             return {
                 agentName: this.name,
-                data: { product_metadata: data },
+                data,
                 status: "success",
             };
         } catch (error: any) {

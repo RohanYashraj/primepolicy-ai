@@ -1,29 +1,27 @@
 import { BaseAgent, AgentResponse } from "./base";
-import { CANONICAL_MASTER_SCHEMA } from "./schema";
+import { PAS_EXECUTABLE_SCHEMA } from "./schema";
 
 export class CoverageBenefitsAgent extends BaseAgent {
-    public name = "Coverage & Benefits Agent";
-    public description = "Encodes sum assured structures, benefit triggers, payout logic, limits, and dependencies.";
+    public name = "Benefit Logic Agent";
+    public description = "Encodes payout triggers and calculation precedence (e.g., higher of, sum of).";
 
     public async run(documentId: string): Promise<AgentResponse> {
         try {
-            const context = await this.getContext("Extract all coverages, benefit triggers, payout logic (fixed/indemnity), limits, deductibles, retentions, and waiting periods.");
+            const context = await this.getContext("Extract benefit payout logic, calculation precedence (higher of, etc.), vesting conditions, and payout triggers.");
 
-            const prompt = `Map the document's benefits into deterministic coverage objects.
-            For each benefit:
-            - unique slug ID and label.
-            - trigger event and payout logic (type, basis, limit, currency).
-            - Deductibles/Retentions (amount, type, is_aggregate).
-            - Waiting period (duration, unit).
-            - Sub-limits and Dependencies.
-            Strict machine fields only. No narrative.`;
+            const prompt = `Encode benefit configuration into machine-executable rules.
+            - precedence: 'higher_of', 'sum_of', 'lower_of', or 'first_occurence'.
+            - components: List of basis fields (sum_assured, etc.) and multipliers.
+            - vesting_condition: period and threshold.
+            - payout_triggers: list of event slugs ('death', etc.).
+            No narrative text; focus on mathematical relationships.`;
 
-            const schema = JSON.stringify(CANONICAL_MASTER_SCHEMA.coverage_benefits, null, 2);
+            const schema = JSON.stringify(PAS_EXECUTABLE_SCHEMA.benefit_configuration, null, 2);
             const data = await this.extract<any>(context, prompt, schema);
 
             return {
                 agentName: this.name,
-                data: { coverage_benefits: data },
+                data: { benefit_configuration: data },
                 status: "success",
             };
         } catch (error: any) {

@@ -1,26 +1,26 @@
 import { BaseAgent, AgentResponse } from "./base";
-import { CANONICAL_MASTER_SCHEMA } from "./schema";
+import { PAS_EXECUTABLE_SCHEMA } from "./schema";
 
 export class UnderwritingRulesAgent extends BaseAgent {
-    public name = "Underwriting Rules Agent";
-    public description = "Specifies risk evaluation requirements, evidence thresholds, and decision gates.";
+    public name = "Underwriting Gate Agent";
+    public description = "Specifies risk evaluation requirements and decision threshold gates.";
 
     public async run(documentId: string): Promise<AgentResponse> {
         try {
-            const context = await this.getContext("Extract underwriting rules, evidence requirements (medical/financial), auto-approval thresholds, and referral triggers.");
+            const context = await this.getContext("Extract underwriting input requirements, auto-pass limits, and referral triggers.");
 
-            const prompt = `Identify deterministic underwriting gates.
-            - List of evidence requirements.
-            - Auto-approval thresholds (max sum assured).
-            - List of referral triggers.
-            Machine-enforceable fields only. Exclude narrative descriptions.`;
+            const prompt = `Identify deterministic underwriting decision gates.
+            - gate_ref: A unique slug.
+            - input_requirements: List of evidence types.
+            - auto_pass_limit: Numerical sum assured limit.
+            - referral_trigger_condition: Machine-readable trigger logic.`;
 
-            const schema = JSON.stringify(CANONICAL_MASTER_SCHEMA.underwriting_gates, null, 2);
+            const schema = JSON.stringify(PAS_EXECUTABLE_SCHEMA.underwriting_decision_gates, null, 2);
             const data = await this.extract<any>(context, prompt, schema);
 
             return {
                 agentName: this.name,
-                data: { underwriting_gates: data },
+                data: { underwriting_decision_gates: data },
                 status: "success",
             };
         } catch (error: any) {

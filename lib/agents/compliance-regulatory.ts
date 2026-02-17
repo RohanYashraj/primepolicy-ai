@@ -1,36 +1,26 @@
 import { BaseAgent, AgentResponse } from "./base";
-import { CANONICAL_MASTER_SCHEMA } from "./schema";
+import { PAS_EXECUTABLE_SCHEMA } from "./schema";
 
 export class ComplianceRegulatoryAgent extends BaseAgent {
-    public name = "Compliance & Regulatory Agent";
-    public description = "Captures governing law, disclosures, statutory constraints, and reporting obligations.";
+    public name = "Regulatory & Tax Agent";
+    public description = "Captures tax treatment, statutory levies, and compliance disclosures.";
 
     public async run(documentId: string): Promise<AgentResponse> {
         try {
-            const context = await this.getContext("Extract statutory constraints, compliance disclosures, reporting obligations, and specific governing law state.");
+            const context = await this.getContext("Extract tax treatment codes, statutory levies, and compliance disclosure references.");
 
-            const prompt = `Extract structured compliance data.
-            - List of event definitions/reporting obligations.
-            - Reporting timeline and documentation.
-            - Settlement logic.
-            Focus on governing laws and statutory constraints.`;
+            const prompt = `Extract structured tax and regulatory data.
+            - tax_treatment_code: e.g., 'Section 80C', 'qualified-plan'.
+            - statutory_levies_percent: numeric percentage.
+            - compliance_disclosure_ref: code or name of the primary disclosure.
+            No paraphrasing.`;
 
-            // Note: The schema for this agent is partially covered in jurisdiction_compliance and partially in claims_administration.
-            // But the user asked for a dedicated agent. He also mentioned 'Compliance & Regulatory Agent that captures governing law, disclosures, statutory constraints, and reporting obligations'.
-            // In our schema.ts, these are in product_metadata.jurisdiction_compliance and claims_administration.
-            // I will adjust the prompt to populate a virtual 'compliance_regulatory' object that we will merge properly.
-
-            const schema = JSON.stringify({
-                governing_law_state: "string",
-                statutory_disclosures: ["string"],
-                regulatory_constraints: ["string"]
-            }, null, 2);
-
+            const schema = JSON.stringify(PAS_EXECUTABLE_SCHEMA.tax_and_regulatory, null, 2);
             const data = await this.extract<any>(context, prompt, schema);
 
             return {
                 agentName: this.name,
-                data: { compliance_regulatory: data }, // We'll handle fusion in orchestrator
+                data: { tax_and_regulatory: data },
                 status: "success",
             };
         } catch (error: any) {

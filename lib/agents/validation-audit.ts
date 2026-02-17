@@ -1,26 +1,27 @@
 import { BaseAgent, AgentResponse } from "./base";
-import { CANONICAL_MASTER_SCHEMA } from "./schema";
+import { PAS_EXECUTABLE_SCHEMA } from "./schema";
 
 export class ValidationAuditAgent extends BaseAgent {
-    public name = "Validation & Audit Agent";
-    public description = "Ensures every schema field is populated with a value or explicitly set to null/not_available.";
+    public name = "Integrity & Validation Agent";
+    public description = "Ensures population integrity and records confidence levels for all fields.";
 
     public async run(documentId: string): Promise<AgentResponse> {
-        // This agent runs after others in a real scenario, but here we provide a mechanism.
-        // It will inspect the contexts for missing data.
         try {
-            const context = await this.getContext("Perform a scan for any field that might be missing or explicitly 'not available' in the document.");
+            const context = await this.getContext("Audit the document for potential missing rules or ambiguous financial terms.");
 
-            const prompt = `Audit the extraction potential for all fields in the canonical schema.
-            For each field path, identify if the value is likely to be 'populated', 'null', or 'not_available' based on the document source.
-            Return a list of field_metadata objects.`;
+            const prompt = `Audit the extraction integrity.
+            For each section of the PAS-executable schema, identify the population state.
+            - path: JSON path to the field.
+            - state: 'populated', 'not_available', or 'null'.
+            - confidence: numeric value (0-1).
+            Provide a machine-readable audit report.`;
 
-            const schema = JSON.stringify(CANONICAL_MASTER_SCHEMA.audit_validation, null, 2);
+            const schema = JSON.stringify(PAS_EXECUTABLE_SCHEMA.audit_and_integrity, null, 2);
             const data = await this.extract<any>(context, prompt, schema);
 
             return {
                 agentName: this.name,
-                data: { audit_validation: data },
+                data: { audit_and_integrity: data },
                 status: "success",
             };
         } catch (error: any) {
