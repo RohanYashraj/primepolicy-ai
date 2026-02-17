@@ -1,9 +1,6 @@
-import { MetadataAgent } from "./metadata";
-import { CoverageAgent } from "./coverages";
-import { ExclusionsAgent } from "./exclusions";
-import { EligibilityAgent } from "./eligibility";
-import { DefinitionsAgent } from "./definitions";
-import { ClaimsAgent } from "./claims";
+import { IdentifierAgent } from "./identifier";
+import { FeatureAgent } from "./features";
+import { RuleAgent } from "./rules";
 import { addDocumentSections, clearDocumentSections } from "../vector-store";
 import { BaseAgent, AgentResponse } from "./base";
 import { MASTER_SCHEMA } from "./schema";
@@ -13,12 +10,9 @@ export class AgentOrchestrator {
 
     constructor() {
         this.agents = [
-            new MetadataAgent(),
-            new CoverageAgent(),
-            new ExclusionsAgent(),
-            new EligibilityAgent(),
-            new DefinitionsAgent(),
-            new ClaimsAgent(),
+            new IdentifierAgent(),
+            new FeatureAgent(),
+            new RuleAgent(),
         ];
     }
 
@@ -26,7 +20,6 @@ export class AgentOrchestrator {
      * Phase 1: Intake - Parses, chunks, and indexes the document.
      */
     public async ingestDocument(buffer: Buffer, fileName: string) {
-        // ... (existing ingestion code remains same)
         console.log(`[ORCHESTRATOR] Starting ingestion for: ${fileName}`);
 
         let pdfData;
@@ -86,12 +79,12 @@ export class AgentOrchestrator {
 
         // Initialize with default empty values from MASTER_SCHEMA to ensure fixed structure
         const consolidatedData: any = {
-            product_metadata: { ...MASTER_SCHEMA.product_metadata },
-            coverages: [],
-            exclusions: [],
-            eligibility_territory: { ...MASTER_SCHEMA.eligibility_territory },
-            definitions: [],
-            claims_procedures: { ...MASTER_SCHEMA.claims_procedures },
+            product_summary: { ...MASTER_SCHEMA.product_summary },
+            eligibility_rules: { ...MASTER_SCHEMA.eligibility_rules },
+            product_features: [],
+            limitations_exclusions: [],
+            compliance_admin: { ...MASTER_SCHEMA.compliance_admin },
+            claims_procedures: [],
         };
 
         // Merge results from each agent

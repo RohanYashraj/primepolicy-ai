@@ -1,58 +1,61 @@
 export const MASTER_SCHEMA = {
-    product_metadata: {
+    product_summary: {
         product_name: "string",
-        line_of_business: "string",
         carrier_name: "string",
-        version: "string",
-        effective_date: "string | null",
-        expiration_date: "string | null",
-        description: "string | null",
-        industry_focus: ["string"],
+        lob_code: "string", // Short code like 'PL', 'CYB', 'DO'
+        version_id: "string",
+        effective_date: "YYYY-MM-DD | null",
+        expiration_date: "YYYY-MM-DD | null",
+        is_admitted: "boolean | null",
+        currency: "string", // e.g., 'USD', 'GBP'
     },
-    coverages: [
+    eligibility_rules: {
+        allowed_industries: ["string"],
+        excluded_industries: ["string"],
+        territory_scope_codes: ["string"], // ISO codes or short names
+        min_asset_value: "number | null",
+        max_employees: "number | null",
+        legal_jurisdiction: "string | null",
+    },
+    product_features: [
         {
-            coverage_name: "string",
-            description: "string | null",
-            limit_of_liability: "string | null",
-            deductible: "string | null",
-            retention: "string | null",
-            waiting_period: "string | null",
-            sub_limits: [
+            feature_id: "string", // slugified name
+            feature_label: "string",
+            value_type: "limit | retention | waiting_period | boolean",
+            numeric_value: "number | null",
+            unit: "USD | days | percent | boolean",
+            applies_per: "claim | aggregate | event | null",
+            is_optional: "boolean",
+            sub_features: [
                 {
-                    name: "string",
-                    limit: "string"
+                    label: "string",
+                    value: "string | number | boolean"
                 }
             ]
         }
     ],
-    exclusions: [
+    limitations_exclusions: [
         {
-            exclusion_name: "string",
-            description: "string | null",
-            category: "string | null", // e.g., General, Professional Liability, Cyber, etc.
-            applicability: "string | null"
+            category: "General | Cyber | Professional | Conduct",
+            short_name: "string",
+            impact_level: "High | Medium | Low",
+            is_absolute: "boolean", // true if no carve-outs
         }
     ],
-    eligibility_territory: {
-        eligible_entities: ["string"],
-        ineligible_entities: ["string"],
-        territorial_scope: "string | null",
-        jurisdiction: "string | null",
-        min_assets: "string | null",
-        max_employees: "string | null",
+    compliance_admin: {
+        reporting_window_days: "number | null",
+        notice_contact_type: "email | portal | physical",
+        notice_contact_detail: "string | null",
+        governing_law_state: "string | null",
     },
-    definitions: [
+    claims_procedures: [
         {
-            term: "string",
-            definition: "string | null",
+            step_name: "string",
+            description: "string",
+            responsible_party: "string",
+            timeline: "string | null",
         }
-    ],
-    claims_procedures: {
-        reporting_contact: "string | null",
-        notice_period: "string | null",
-        reporting_format: "string | null",
-        requirements: "string | null"
-    }
+    ]
 };
 
 export const SCHEMA_STRING = JSON.stringify(MASTER_SCHEMA, null, 2);
