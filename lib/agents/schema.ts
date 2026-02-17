@@ -1,61 +1,122 @@
-export const MASTER_SCHEMA = {
-    product_summary: {
-        product_name: "string",
-        carrier_name: "string",
-        lob_code: "string", // Short code like 'PL', 'CYB', 'DO'
-        version_id: "string",
-        effective_date: "YYYY-MM-DD | null",
-        expiration_date: "YYYY-MM-DD | null",
-        is_admitted: "boolean | null",
-        currency: "string", // e.g., 'USD', 'GBP'
+export const CANONICAL_MASTER_SCHEMA = {
+    schema_info: {
+        version: "1.0.0",
+        generated_at: "ISO8601",
+        confidence_score: "number (0-1)",
+        is_complete: "boolean"
     },
-    eligibility_rules: {
-        allowed_industries: ["string"],
-        excluded_industries: ["string"],
-        territory_scope_codes: ["string"], // ISO codes or short names
-        min_asset_value: "number | null",
-        max_employees: "number | null",
-        legal_jurisdiction: "string | null",
+    product_metadata: {
+        product_identity: {
+            name: "string",
+            carrier: "string",
+            lob_code: "string", // Short code: e.g. 'CYB', 'PL', 'LIFE'
+            version_id: "string",
+            market_segment: "string" // e.g. 'SME', 'Mid-Market', 'Enterprise'
+        },
+        jurisdiction_compliance: {
+            governing_laws: ["string"],
+            is_admitted: "boolean | null",
+            territorial_scope: ["string"], // ISO codes
+            regulatory_disclosures: ["string"]
+        },
+        monetary_units: {
+            currency: "string", // ISO 4217 code
+            rounding_rules: "string"
+        }
     },
-    product_features: [
+    eligibility_engine: {
+        age_limits: {
+            min: "number | null",
+            max: "number | null",
+            unit: "years | days"
+        },
+        residency_requirements: ["string"],
+        occupation_classes: ["string"],
+        participation_rules: {
+            min_employees: "number | null",
+            min_assets: "number | null",
+            mandatory_membership: "boolean"
+        },
+        exclusionary_conditions: ["string"]
+    },
+    coverage_benefits: [
         {
-            feature_id: "string", // slugified name
-            feature_label: "string",
-            value_type: "limit | retention | waiting_period | boolean",
-            numeric_value: "number | null",
-            unit: "USD | days | percent | boolean",
-            applies_per: "claim | aggregate | event | null",
-            is_optional: "boolean",
-            sub_features: [
+            benefit_id: "string", // unique slug
+            label: "string",
+            trigger_event: "string",
+            payout_logic: {
+                type: "fixed | indemnity | reimbursement",
+                basis: "actual_loss | sum_assured | scale",
+                limit_amount: "number | null",
+                currency: "string"
+            },
+            deductibles_retentions: {
+                standard_amount: "number | null",
+                type: "flat | percentage | days",
+                is_aggregate: "boolean"
+            },
+            waiting_period: {
+                duration: "number | null",
+                unit: "days | weeks | months"
+            },
+            sub_limits: [
                 {
                     label: "string",
-                    value: "string | number | boolean"
+                    limit: "number"
                 }
-            ]
+            ],
+            dependencies: ["string"] // slugs of other benefits
         }
     ],
-    limitations_exclusions: [
-        {
-            category: "General | Cyber | Professional | Conduct",
-            short_name: "string",
-            impact_level: "High | Medium | Low",
-            is_absolute: "boolean", // true if no carve-outs
+    premium_payment: {
+        calculation_basis: {
+            method: "rating_table | fixed | flat_rate",
+            factors: ["string"] // e.g. 'age', 'sum_insured'
+        },
+        modes: ["manual", "automatic"],
+        frequencies: ["monthly", "quarterly", "annual"],
+        payment_grace_period: {
+            duration: "number | null",
+            unit: "days"
         }
-    ],
-    compliance_admin: {
-        reporting_window_days: "number | null",
-        notice_contact_type: "email | portal | physical",
-        notice_contact_detail: "string | null",
-        governing_law_state: "string | null",
     },
-    claims_procedures: [
+    exclusions_limitations: [
         {
-            step_name: "string",
-            description: "string",
-            responsible_party: "string",
-            timeline: "string | null",
+            rule_id: "string",
+            category: "standard | professional | conduct | external",
+            impact: "full_exclusion | benefit_reduction",
+            applicability_condition: "string | null",
+            is_absolute: "boolean"
         }
-    ]
+    ],
+    underwriting_gates: {
+        evidence_requirements: ["string"], // e.g. 'medical_report', 'self_declaration'
+        auto_approval_thresholds: {
+            max_sum_assured: "number | null"
+        },
+        referral_triggers: ["string"]
+    },
+    claims_administration: {
+        event_definitions: ["string"],
+        reporting_timeline: {
+            max_days_from_event: "number | null",
+            notice_format: "string"
+        },
+        required_documentation: ["string"],
+        settlement_sla: {
+            days_to_pay: "number | null"
+        }
+    },
+    audit_validation: {
+        field_metadata: [
+            {
+                field_path: "string",
+                status: "populated | null | not_available",
+                source_context: "string | null" // brief pointer to PDF section
+            }
+        ]
+    }
 };
 
-export const SCHEMA_STRING = JSON.stringify(MASTER_SCHEMA, null, 2);
+export const MASTER_SCHEMA = CANONICAL_MASTER_SCHEMA; // Alias for backward compatibility
+export const SCHEMA_STRING = JSON.stringify(CANONICAL_MASTER_SCHEMA, null, 2);

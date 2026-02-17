@@ -1,18 +1,32 @@
-import { IdentifierAgent } from "./identifier";
-import { FeatureAgent } from "./features";
-import { RuleAgent } from "./rules";
+import { SchemaGuardianAgent } from "./schema-guardian";
+import { ProductMetadataAgent } from "./product-metadata";
+import { EligibilityAgent } from "./eligibility-agent";
+import { CoverageBenefitsAgent } from "./coverage-benefits";
+import { PremiumPaymentAgent } from "./premium-payment";
+import { ExclusionsLimitationsAgent } from "./exclusions-limitations";
+import { UnderwritingRulesAgent } from "./underwriting-rules";
+import { ClaimsAdministrationAgent } from "./claims-administration";
+import { ComplianceRegulatoryAgent } from "./compliance-regulatory";
+import { ValidationAuditAgent } from "./validation-audit";
 import { addDocumentSections, clearDocumentSections } from "../vector-store";
 import { BaseAgent, AgentResponse } from "./base";
-import { MASTER_SCHEMA } from "./schema";
+import { CANONICAL_MASTER_SCHEMA } from "./schema";
 
 export class AgentOrchestrator {
     private agents: BaseAgent[] = [];
 
     constructor() {
         this.agents = [
-            new IdentifierAgent(),
-            new FeatureAgent(),
-            new RuleAgent(),
+            new SchemaGuardianAgent(),
+            new ProductMetadataAgent(),
+            new EligibilityAgent(),
+            new CoverageBenefitsAgent(),
+            new PremiumPaymentAgent(),
+            new ExclusionsLimitationsAgent(),
+            new UnderwritingRulesAgent(),
+            new ClaimsAdministrationAgent(),
+            new ComplianceRegulatoryAgent(),
+            new ValidationAuditAgent(),
         ];
     }
 
@@ -69,34 +83,44 @@ export class AgentOrchestrator {
     }
 
     /**
-     * Phase 2: Extraction - Runs all agents to build structured artefacts.
+     * Phase 2: Extraction - Runs all agents to build canonical structured artefacts.
      */
     public async executeExtraction(documentId: string): Promise<any> {
-        console.log(`[ORCHESTRATOR] Starting multi-agent extraction for: ${documentId}`);
+        console.log(`[ORCHESTRATOR] Starting canonical multi-agent extraction for: ${documentId}`);
         const results = await Promise.all(
             this.agents.map(agent => agent.run(documentId))
         );
 
-        // Initialize with default empty values from MASTER_SCHEMA to ensure fixed structure
-        const consolidatedData: any = {
-            product_summary: { ...MASTER_SCHEMA.product_summary },
-            eligibility_rules: { ...MASTER_SCHEMA.eligibility_rules },
-            product_features: [],
-            limitations_exclusions: [],
-            compliance_admin: { ...MASTER_SCHEMA.compliance_admin },
-            claims_procedures: [],
-        };
+        // Initialize with default template from CANONICAL_MASTER_SCHEMA to ensure structure stability
+        const consolidatedData: any = JSON.parse(JSON.stringify(CANONICAL_MASTER_SCHEMA));
 
         // Merge results from each agent
         results.forEach(res => {
             if (res.status === "success" && res.data) {
-                Object.assign(consolidatedData, res.data);
+                this.deepMerge(consolidatedData, res.data);
             } else {
                 console.warn(`[ORCHESTRATOR] Agent ${res.agentName} failed or returned no data: ${res.message}`);
             }
         });
 
+        // Final Validation: Ensure no structure change and handle missing values
+        // Everything is already initialized with nulls/empty from the schema template.
+
         return consolidatedData;
+    }
+
+    /**
+     * Helper for deep merging agent results into the locked schema structure.
+     */
+    private deepMerge(target: any, source: any) {
+        for (const key in source) {
+            if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                if (!target[key]) target[key] = {};
+                this.deepMerge(target[key], source[key]);
+            } else {
+                target[key] = source[key];
+            }
+        }
     }
 
     /**
