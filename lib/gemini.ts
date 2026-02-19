@@ -39,7 +39,9 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, baseDelay = 10
  */
 export async function generateEmbedding(text: string) {
     return withRetry(async () => {
-        const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+        const modelName = process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-001";
+        console.log(`[GEMINI] Using embedding model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.embedContent({
             content: { role: "user", parts: [{ text }] },
             outputDimensionality: 768,
@@ -51,8 +53,9 @@ export async function generateEmbedding(text: string) {
 /**
  * Interacts with Gemini Pro for structured extraction or general reasoning.
  */
-export async function generateContent(prompt: string, modelName = "gemini-3-pro-preview") {
+export async function generateContent(prompt: string, modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash") {
     return withRetry(async () => {
+        console.log(`[GEMINI] Using content model: ${modelName}`);
         const model = genAI.getGenerativeModel({ model: modelName });
         const result = await model.generateContent(prompt);
         return result.response.text();
@@ -66,8 +69,10 @@ export async function generateStructuredOutput<T>(prompt: string, schemaDescript
     console.log("[GEMINI] Generating structured output...");
 
     return withRetry(async () => {
+        const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+        console.log(`[GEMINI] Generating structured output with model: ${modelName}...`);
         const model = genAI.getGenerativeModel({
-            model: "gemini-3-pro-preview",
+            model: modelName,
             generationConfig: {
                 responseMimeType: "application/json",
             }
