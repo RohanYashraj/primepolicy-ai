@@ -12,6 +12,7 @@ import { AuditIntegrityAgent } from "./audit-integrity";
 import { addDocumentSections, clearDocumentSections } from "../vector-store";
 import { BaseAgent, AgentResponse } from "./base";
 import { DEFINITIVE_PAS_SCHEMA } from "./schema";
+import { logger } from "../utils";
 
 export class AgentOrchestrator {
     private agents: BaseAgent[] = [];
@@ -58,12 +59,22 @@ export class AgentOrchestrator {
         }));
 
         await addDocumentSections(sections);
+        logger.info(`Ingestion complete: ${chunks.length} chunks created for ${fileName}`);
         return { message: "Ingestion complete", chunksCreated: chunks.length };
     }
 
     public async executeExtraction(documentId: string): Promise<any> {
-        console.log(`[ORCHESTRATOR] Starting definitive PAS extraction for: ${documentId}`);
-        const results = await Promise.all(this.agents.map(agent => agent.run(documentId)));
+        logger.info(`[ORCHESTRATOR] Starting definitive PAS extraction for: ${documentId}`);
+
+        // Execute agents in clusters to avoid hitting rate limits and reduce redundant work
+        const results: AgentResponse[] = [];
+        const clusterSize = 2;
+        for (let i = 0; i < this.agents.length; i += clusterSize) {
+            const cluster = this.agents.slice(i, i + clusterSize);
+            logger.debug(`[ORCHESTRATOR] Executing agent cluster: ${cluster.map(a => a.name).join(", ")}`);
+            const clusterResults = await Promise.all(cluster.map(agent => agent.run(documentId)));
+            results.push(...clusterResults);
+        }
 
         const consolidatedData: any = JSON.parse(JSON.stringify(DEFINITIVE_PAS_SCHEMA));
 
@@ -91,12 +102,20 @@ export class AgentOrchestrator {
         const paragraphs = text.split(/\n\n+/);
         const chunks: string[] = [];
         let currentChunk = "";
+        const overlapCount = 2; // Number of paragraphs to overlap
+        const recentParagraphs: string[] = [];
+
         for (const para of paragraphs) {
-            if ((currentChunk.length + para.length) > 1500 && currentChunk.length > 0) {
+            const cleanPara = para.trim().replace(/\u0000/g, "");
+            if (cleanPara.length === 0) continue;
+
+            if ((currentChunk.length + cleanPara.length) > 3000 && currentChunk.length > 0) {
                 chunks.push(currentChunk.trim());
-                currentChunk = "";
+                // Keep the last few paragraphs for overlap
+                currentChunk = recentParagraphs.slice(-overlapCount).join("\n\n") + "\n\n";
             }
-            currentChunk += para + "\n\n";
+            currentChunk += cleanPara + "\n\n";
+            recentParagraphs.push(cleanPara);
         }
         if (currentChunk.trim().length > 0) chunks.push(currentChunk.trim());
         return chunks;

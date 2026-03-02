@@ -1,5 +1,6 @@
 import { generateStructuredOutput } from "../gemini";
 import { searchDocumentSections } from "../vector-store";
+import { logger } from "../utils";
 
 export interface AgentResponse {
     agentName: string;
@@ -24,9 +25,9 @@ export abstract class BaseAgent {
      * Helper to retrieve relevant context from the vector store for a specific query.
      */
     protected async getContext(query: string, limit = 5) {
-        console.log(`[AGENT] Getting context for: ${query}`);
+        logger.debug(`[${this.name}] Getting context for: ${query}`);
         const results = await searchDocumentSections(query, limit);
-        console.log(`[AGENT] Found ${results.length} relevant sections`);
+        logger.debug(`[${this.name}] Found ${results.length} relevant sections`);
         return results.map(r => r.content).join("\n\n---\n\n");
     }
 
@@ -42,9 +43,9 @@ export abstract class BaseAgent {
       ${prompt}
     `;
 
-        console.log(`[AGENT] Starting extraction with prompt: ${prompt.substring(0, 50)}...`);
+        logger.debug(`[${this.name}] Starting extraction with prompt: ${prompt.substring(0, 50)}...`);
         const result = await generateStructuredOutput<T>(fullPrompt, schema);
-        console.log(`[AGENT] Extraction complete`);
+        logger.debug(`[${this.name}] Extraction complete`);
         return result;
     }
 }
