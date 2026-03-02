@@ -31,7 +31,28 @@ export default function ArtefactsPage() {
 
   const handleCopy = () => {
     if (!hasData) return;
-    navigator.clipboard.writeText(JSON.stringify(combinedData, null, 2));
+    const text = JSON.stringify(combinedData, null, 2);
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+    } else {
+      // Fallback for non-secure contexts
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        console.error("Fallback: Unable to copy", err);
+      }
+      document.body.removeChild(textArea);
+    }
+
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
