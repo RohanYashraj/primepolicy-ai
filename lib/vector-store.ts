@@ -43,7 +43,7 @@ export async function addDocumentSections(sections: DocumentSection[]) {
 /**
  * Searches for the most relevant document sections given a query.
  */
-export async function searchDocumentSections(query: string, matchCount = 5, matchThreshold = 0.5): Promise<DocumentSection[]> {
+export async function searchDocumentSections(query: string, matchCount = 5, matchThreshold = 0.5, documentId?: string): Promise<DocumentSection[]> {
     const maxRetries = 3;
     let lastError: any;
 
@@ -55,11 +55,16 @@ export async function searchDocumentSections(query: string, matchCount = 5, matc
             const { data, error } = await supabase.rpc("match_document_sections", {
                 query_embedding: queryEmbedding,
                 match_threshold: matchThreshold,
-                match_count: matchCount,
+                match_count: documentId ? 100 : matchCount,
             });
 
             if (error) throw error;
-            return data as DocumentSection[];
+
+            let results = data as DocumentSection[];
+            if (documentId) {
+                results = results.filter(row => row.metadata?.source === documentId);
+            }
+            return results.slice(0, matchCount);
         } catch (error: any) {
             lastError = error;
             const isTransient = error.message?.includes("520") ||

@@ -3,26 +3,23 @@ import { DEFINITIVE_PAS_SCHEMA } from "./schema";
 
 export class IdentityAgent extends BaseAgent {
     public name = "Identity Agent";
-    public description = "Owner of product versioning, line of business, jurisdiction, and currency.";
+    public description = "Owner of product name, family, variant, line of business, jurisdiction, and currency.";
 
     public async run(documentId: string): Promise<AgentResponse> {
         try {
-            const context = await this.getContext("Extract version numbers, approval/effective dates, line of business (primary/secondary), country/state codes, and currency ISO/rounding.");
+            const context = await this.getContext(documentId, "Extract product name, family, variant code, line of business, country/state codes, regulator, and currency.");
 
-            const prompt = `Extract versioning, LOB, jurisdiction, and currency details.
-      - version: number, approval_date, effective_date, expiry_date (YYYY-MM-DD).
-      - line_of_business: primary (TERM|ENDOWMENT|ULIP|ANNUITY|HEALTH) and secondary.
-      - jurisdiction: country_code (ISO-3166-1), state_code (ISO-3166-2), regulator name.
-      - currency: iso_code (ISO-4217), rounding_rules.
-      Convert all dates to YYYY-MM-DD. Use null if not available.`;
+            const prompt = `Extract global product identity details.
+      - product_name: Full marketing name.
+      - product_family: TERM | ENDOWMENT | ULIP | ANNUITY | HEALTH
+      - variant_code: internal code if present.
+      - line_of_business: e.g. TERM, HEALTH, etc.
+      - jurisdiction: country_code (ISO-3166-1) and regulator name.
+      - currency: currency code (ISO-4217).
+      Use null if any value is not available. Strictly follow the JSON structure provided.`;
 
             const schema = JSON.stringify({
-                product_context: {
-                    version: DEFINITIVE_PAS_SCHEMA.product_context.version,
-                    line_of_business: DEFINITIVE_PAS_SCHEMA.product_context.line_of_business,
-                    jurisdiction: DEFINITIVE_PAS_SCHEMA.product_context.jurisdiction,
-                    currency: DEFINITIVE_PAS_SCHEMA.product_context.currency
-                }
+                product_context: DEFINITIVE_PAS_SCHEMA.product_context
             }, null, 2);
 
             const data = await this.extract<any>(context, prompt, schema);

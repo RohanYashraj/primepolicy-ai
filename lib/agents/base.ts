@@ -24,9 +24,9 @@ export abstract class BaseAgent {
     /**
      * Helper to retrieve relevant context from the vector store for a specific query.
      */
-    protected async getContext(query: string, limit = 5) {
-        logger.debug(`[${this.name}] Getting context for: ${query}`);
-        const results = await searchDocumentSections(query, limit);
+    protected async getContext(documentId: string, query: string, limit = 5) {
+        logger.debug(`[${this.name}] Getting context for: ${query} on doc: ${documentId}`);
+        const results = await searchDocumentSections(query, limit, 0.5, documentId);
         logger.debug(`[${this.name}] Found ${results.length} relevant sections`);
         return results.map(r => r.content).join("\n\n---\n\n");
     }

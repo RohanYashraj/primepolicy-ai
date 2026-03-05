@@ -3,21 +3,20 @@ import { DEFINITIVE_PAS_SCHEMA } from "./schema";
 
 export class PricingAgent extends BaseAgent {
     public name = "Pricing Agent";
-    public description = "Owner of premium_rules domain (calculation and structure).";
+    public description = "Owner of premium_structure domain.";
 
     public async run(documentId: string): Promise<AgentResponse> {
         try {
-            const context = await this.getContext("Extract payment structure, frequencies, grace periods, calculation method, rating factors, and taxes/charges.");
+            const context = await this.getContext(documentId, "Extract payment structure, frequencies, and grace periods.");
 
             const prompt = `Extract deterministic premium rules.
-      - payment_structure: type (single/regular/limited), term years.
+      - payment_type: single | regular | limited
+      - premium_payment_term_years: payment term in years, or null if single pay.
       - frequencies_allowed: annual, half_yearly, quarterly, monthly.
-      - grace_period: duration, unit.
-      - premium_calculation: method, factors, and table references.
-      - taxes_and_charges: GST and other levies.
-      Strictly follow the defined types for all fields.`;
+      - grace_period_days: grace period in days.
+      Strictly follow the defined types for all fields in DEFINITIVE_PAS_SCHEMA.premium_structure.`;
 
-            const schema = JSON.stringify({ premium_rules: DEFINITIVE_PAS_SCHEMA.premium_rules }, null, 2);
+            const schema = JSON.stringify({ premium_structure: DEFINITIVE_PAS_SCHEMA.premium_structure }, null, 2);
             const data = await this.extract<any>(context, prompt, schema);
 
             return {

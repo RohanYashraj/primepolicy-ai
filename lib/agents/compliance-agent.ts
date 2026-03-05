@@ -7,13 +7,12 @@ export class ComplianceAgent extends BaseAgent {
 
     public async run(documentId: string): Promise<AgentResponse> {
         try {
-            const context = await this.getContext("Extract tax benefits (80C, 10(10D)), statutory disclosures, and regulatory constraints.");
+            const context = await this.getContext(documentId, "Extract tax benefits and regulatory notes.");
 
             const prompt = `Extract structured tax and regulatory data.
-      - tax_benefits: e.g., 'SECTION_80C', 'SECTION_10_10D'.
-      - statutory_disclosures: list of mandatory statements.
-      - regulatory_constraints: specific limitations or reporting obligations.
-      No paraphrasing. Convert findings into structured lists.`;
+      - tax_benefits_summary: Summary of tax benefits (e.g. 80C, 10(10D)). Null if not applicable.
+      - regulatory_notes: Any regulatory disclosures, constraints, or notes. Null if not applicable.
+      Strictly follow the DEFINITIVE_PAS_SCHEMA.tax_and_regulatory structure.`;
 
             const schema = JSON.stringify({ tax_and_regulatory: DEFINITIVE_PAS_SCHEMA.tax_and_regulatory }, null, 2);
             const data = await this.extract<any>(context, prompt, schema);

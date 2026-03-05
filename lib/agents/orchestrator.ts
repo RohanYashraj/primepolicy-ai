@@ -1,14 +1,10 @@
-import { SchemaGuardianAgent } from "./schema-guardian";
 import { IdentityAgent } from "./identity-agent";
 import { EligibilityAgent } from "./eligibility-agent";
 import { BenefitLogicAgent } from "./benefit-logic";
 import { PricingAgent } from "./pricing-agent";
 import { LifecycleAgent } from "./lifecycle-agent";
-import { UnderwritingAgent } from "./underwriting-agent";
 import { ExclusionAgent } from "./exclusion-agent";
-import { ClaimsAgent } from "./claims-agent";
 import { ComplianceAgent } from "./compliance-agent";
-import { AuditIntegrityAgent } from "./audit-integrity";
 import { addDocumentSections, clearDocumentSections } from "../vector-store";
 import { BaseAgent, AgentResponse } from "./base";
 import { DEFINITIVE_PAS_SCHEMA } from "./schema";
@@ -19,17 +15,13 @@ export class AgentOrchestrator {
 
     constructor() {
         this.agents = [
-            new SchemaGuardianAgent(),
             new IdentityAgent(),
             new EligibilityAgent(),
             new BenefitLogicAgent(),
             new PricingAgent(),
             new LifecycleAgent(),
-            new UnderwritingAgent(),
             new ExclusionAgent(),
-            new ClaimsAgent(),
-            new ComplianceAgent(),
-            new AuditIntegrityAgent(), // Not functional in extraction but handles integrity reporting
+            new ComplianceAgent()
         ];
     }
 
