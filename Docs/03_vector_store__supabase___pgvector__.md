@@ -148,22 +148,22 @@ Here's how the Vector Store integrates into the overall process:
 ```mermaid
 sequenceDiagram
     participant Orchestrator
-    participant Vector Store (Supabase + pgvector)
-    participant Embedding Model (Gemini)
+    participant VS as Vector Store (Supabase + pgvector)
+    participant EM as Embedding Model (Gemini)
     participant Specialist Agent
 
-    Orchestrator->>Vector Store (Supabase + pgvector): 1. Add Chunks (text content, metadata)
-    Note over Vector Store (Supabase + pgvector): For each chunk:
-    Vector Store (Supabase + pgvector)->>Embedding Model (Gemini): 2. Generate Embedding (chunk text)
-    Embedding Model (Gemini)-->>Vector Store (Supabase + pgvector): 3. Returns numerical embedding
-    Vector Store (Supabase + pgvector)->>Vector Store (Supabase + pgvector): 4. Store chunk text + embedding in PostgreSQL table
-    Note over Vector Store (Supabase + pgvector): All chunks stored
+    Orchestrator->>VS: 1. Add Chunks (text content, metadata)
+    Note over VS: For each chunk:
+    VS->>EM: 2. Generate Embedding (chunk text)
+    EM-->>VS: 3. Returns numerical embedding
+    VS->>VS: 4. Store chunk text + embedding in PostgreSQL table
+    Note over VS: All chunks stored
     
-    Specialist Agent->>Vector Store (Supabase + pgvector): 5. Search Relevant Chunks (question text, count)
-    Vector Store (Supabase + pgvector)->>Embedding Model (Gemini): 6. Generate Embedding (question text)
-    Embedding Model (Gemini)-->>Vector Store (Supabase + pgvector): 7. Returns numerical embedding for question
-    Vector Store (Supabase + pgvector)->>Vector Store (Supabase + pgvector): 8. Perform Similarity Search in PostgreSQL
-    Vector Store (Supabase + pgvector)-->>Specialist Agent: 9. Returns top N relevant chunks
+    Specialist Agent->>VS: 5. Search Relevant Chunks (question text, count)
+    VS->>EM: 6. Generate Embedding (question text)
+    EM-->>VS: 7. Returns numerical embedding for question
+    VS->>VS: 8. Perform Similarity Search in PostgreSQL
+    VS-->>Specialist Agent: 9. Returns top N relevant chunks
 ```
 
 ### Code Walkthrough: `lib/vector-store.ts`

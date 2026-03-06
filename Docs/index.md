@@ -7,20 +7,13 @@ This project is an *AI-powered system* designed to extract key information from 
 
 ```mermaid
 flowchart TD
-    A0["Agent Orchestrator
-"]
-    A1["Specialist Agents
-"]
-    A2["Gemini LLM Interaction (with Throttling & Retries)
-"]
-    A3["Vector Store (Supabase + pgvector)
-"]
-    A4["Definitive PAS Schema
-"]
-    A5["Document Ingestion & Semantic Chunking
-"]
-    A6["Logger Utility
-"]
+    A0["Agent Orchestrator"]
+    A1["Specialist Agents"]
+    A2["Gemini LLM Interaction (with Throttling & Retries)"]
+    A3["Vector Store (Supabase + pgvector)"]
+    A4["Definitive PAS Schema"]
+    A5["Document Ingestion & Semantic Chunking"]
+    A6["Logger Utility"]
     A0 -- "Orchestrates" --> A1
     A0 -- "Manages document storage in" --> A3
     A0 -- "Uses for merging" --> A4

@@ -22,11 +22,12 @@ export function Mermaid({ chart }: { chart: string }) {
 
     const renderChart = async () => {
       try {
-        // Sanitize the chart by replacing newlines inside quoted strings with spaces
-        // Mermaid parses newlines poorly inside node labels like `A["Text\n"]`
-        const sanitizedChart = chart.replace(/"([^"]*)"/g, (match, p1) => {
-          return `"${p1.replace(/\n/g, " ")}"`;
-        });
+        // Sanitize the chart by replacing newlines inside labels with spaces
+        // Mermaid parses newlines poorly inside node labels like `A["Text\n"]` or `B[Text\n]`
+        const sanitizedChart = chart
+          .replace(/"([^"]*)"/g, (match, p1) => `"${p1.replace(/\n/g, " ")}"`)
+          .replace(/\[([^\]]*)\]/g, (match, p1) => `[${p1.replace(/\n/g, " ")}]`)
+          .replace(/\(([^)]*)\)/g, (match, p1) => `(${p1.replace(/\n/g, " ")})`);
 
         const { svg } = await mermaid.render(mermaidId.current, sanitizedChart);
         setSvgStr(svg);
