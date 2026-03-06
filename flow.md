@@ -65,45 +65,97 @@ The final step brings all the puzzle pieces together tightly.
 
 ---
 
-### Complete Process Flowchart
+### Complete Architecture & Process Flowchart
 
 ```mermaid
-graph TD
-    %% START
-    Start([User Uploads PDF]) --> Orchestrator_Ingest[AgentOrchestrator<br/>ingestDocument / PDF Ingestion]
+flowchart TD
 
-    %% PHASE 1: Ingestion
-    subgraph Phase 1: Document Ingestion & Preparation
-        Orchestrator_Ingest --> PDFParse[Lib: pdf-parse<br/>Extract Raw Text]
-        PDFParse --> CleanText[Clean Text<br/>Remove null chars]
-        CleanText --> Chunking[AgentOrchestrator<br/>semanticChunk: Split into overlapping 3000-char chunks]
-        Chunking --> GetEmbeddings[gemini.ts<br/>generateEmbedding: Convert chunks to vectors]
-        GetEmbeddings --> VectorStore[vector-store.ts<br/>addDocumentSections: Save chunks & embeddings to Supabase]
+%% STYLING
+classDef client fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#000
+classDef api fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#000
+classDef ingest fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#000
+classDef vector fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#000
+classDef agent fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#000
+classDef llm fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#000
+classDef merge fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#000
+
+%% CLIENT
+User([User Uploads Policy PDF]):::client
+
+%% API LAYER
+subgraph API["Next.js API Layer"]
+    direction LR
+    Route["POST /api/extract<br/>(Extract req.formData)"]:::api
+    Orchestrator["AgentOrchestrator<br/>.ingestDocument()<br/>.executeExtraction()"]:::api
+    Route --> Orchestrator
+end
+
+User --> Route
+
+%% INGESTION
+subgraph Ingestion["Phase 1: Document Ingestion"]
+    direction LR
+    PDFParse["1. pdf-parse(buffer)<br/>Extract Raw Text"]:::ingest
+    Clean["2. Clean Text<br/>(Remove \\u0000)"]:::ingest
+    ClearDB["3. clearDocumentSections()<br/>(Delete old records)"]:::ingest
+    Chunk["4. semanticChunk(text)<br/>Split: 3000 chars<br/>Overlap: 2 paras"]:::ingest
+    Embed["5. generateEmbedding()<br/>Model: gemini-embedding-001<br/>Semaphore limit: 5 concurrent<br/>Retries: Max 5"]:::ingest
+    Store["6. addDocumentSections()<br/>Batch Insert (Limit 5)"]:::ingest
+    
+    PDFParse --> Clean --> ClearDB --> Chunk --> Embed --> Store
+end
+
+Orchestrator -- "await queue File" --> PDFParse
+
+%% VECTOR DB
+subgraph DB["Supabase Database"]
+    direction LR
+    VectorDB[(document_sections<br/>pgvector Store)]:::vector
+    RPC["match_document_sections<br/>(Similarity RPC query)<br/>Limit: 5, Threshold: 0.5"]:::vector
+end
+
+Store -- "INSERT (content, metadata, embedding)" --> VectorDB
+
+%% EXTRACTION
+subgraph Agents["Phase 2: Domain Agent Extraction"]
+    direction TB
+    
+    subgraph Cluster["Agent Clusters"]
+        direction LR
+        Agent1["IdentityAgent"]:::agent
+        Agent2["EligibilityAgent"]:::agent
+        Agent3["BenefitLogicAgent"]:::agent
+        Agent4["PricingAgent"]:::agent
+        Agent5["LifecycleAgent"]:::agent
+        Agent6["ExclusionAgent"]:::agent
+        Agent7["ComplianceAgent"]:::agent
     end
 
-    VectorStore --> Orchestrator_Extract[AgentOrchestrator<br/>executeExtraction starts]
+    Search["BaseAgent.getContext()<br/>(Compute Query Embedding)"]:::agent
+    ExtractRun["BaseAgent.extract()<br/>(Combine Text Context, Prompt, Schema)"]:::agent
+    
+    LLM["generateStructuredOutput()<br/>Model: gemini-2.0-flash<br/>responseMimeType: application/json<br/>globalThrottle() & withRetry()"]:::llm
+    
+    Cluster --> Search
+    Search --> ExtractRun
+    ExtractRun --> LLM
+end
 
-    %% PHASE 2: Intelligence & Extraction
-    subgraph Phase 2: Intelligence & Extraction
-        Orchestrator_Extract --> Clusters[Distribute 11 Domain Agents in Clusters of 2<br/>to avoid rate limits]
-        
-        Clusters --> AgentRun[DomainAgent runs BaseAgent's run method]
-        AgentRun --> GetContext[BaseAgent: getContext]
-        
-        GetContext --> SearchVector[vector-store.ts<br/>searchDocumentSections: Fetch relevant chunks from Supabase]
-        SearchVector --> Extract[BaseAgent: extract]
-        
-        Extract --> GeminiOutput[gemini.ts<br/>generateStructuredOutput: Call Gemini-2.0-flash with Context, Prompt, Schema]
-        GeminiOutput --> RetryThrottle[gemini.ts<br/>withRetry & globalThrottle: Handle network/API limits]
-        RetryThrottle --> AgentReturn[Agent Returns Extracted JSON Segment]
-    end
+Orchestrator -- "Execute Agents" --> Cluster
 
-    AgentReturn --> Merging[AgentOrchestrator: gather AgentResponses]
+Search -- "Send Query Vector" --> RPC
+RPC -- "Match" --> VectorDB
+VectorDB -. "Return Context Chunks" .-> ExtractRun
 
-    %% PHASE 3: Consolidation
-    subgraph Phase 3: Consolidation & Output
-        Merging --> DeepMerge[AgentOrchestrator<br/>deepMerge: Stitch JSON segments together]
-        DeepMerge --> SchemaDef[Apply over DEFINITIVE_PAS_SCHEMA<br/>Ensure exact final format]
-        SchemaDef --> FinalJSON([Output Final Complete JSON Object])
-    end
+%% CONSOLIDATION
+subgraph Consolidation["Phase 3: Consolidation"]
+    direction LR
+    Schema["1. Load DEFINITIVE_PAS_SCHEMA<br/>(Master Blueprint template)"]:::merge
+    MergeEngine["2. deepMerge(target, source)<br/>Iterate over AgentResponses"]:::merge
+    JSON(["3. Return Final JSON<br/>(NextResponse.json)"]):::client
+    
+    Schema --> MergeEngine --> JSON
+end
+
+LLM -- "AgentResponse {status: success, data}" --> Schema
 ```
