@@ -5,23 +5,68 @@ import { FileJson, Copy, Download, Box, Layers, Zap, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ArtefactsPage() {
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<any>(null);
+  const [copied, setCopied] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const storedResults = localStorage.getItem("extraction_results");
+    const storedResults = sessionStorage.getItem("extraction_results");
     if (storedResults) {
-      setResults(JSON.parse(storedResults));
+      try {
+        setResults(JSON.parse(storedResults));
+      } catch (e) {
+        console.error("Failed to parse stored results", e);
+      }
     }
     setIsLoaded(true);
   }, []);
 
-  const combinedData = results.reduce((acc, curr) => {
-    return { ...acc, ...curr.data };
-  }, {});
+  const combinedData = Array.isArray(results)
+    ? results.reduce((acc, curr) => ({ ...acc, ...curr.data }), {})
+    : (results || {});
+
+  const hasData = Array.isArray(results)
+    ? results.length > 0
+    : (results && Object.keys(results).length > 0);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(combinedData, null, 2));
+    if (!hasData) return;
+    const text = JSON.stringify(combinedData, null, 2);
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text);
+    } else {
+      // Fallback for non-secure contexts
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand("copy");
+      } catch (err) {
+        console.error("Fallback: Unable to copy", err);
+      }
+      document.body.removeChild(textArea);
+    }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExport = () => {
+    if (!hasData) return;
+    const dataStr = JSON.stringify(combinedData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = 'Master_Payload.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
   };
 
   if (!isLoaded) return null;
@@ -34,18 +79,27 @@ export default function ArtefactsPage() {
           <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">Consolidated Structured Output // Protocol V4</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" size="sm" onClick={handleCopy} className="rounded-none font-mono text-[10px] uppercase tracking-widest h-10 px-6">
-            <Copy className="w-3 h-3 mr-2" />
-            Copy JSON
+          <Button variant="outline" size="sm" onClick={handleCopy} className="rounded-none font-mono text-[10px] uppercase tracking-widest h-10 px-6 transition-all duration-300">
+            {copied ? (
+              <Zap className="w-3 h-3 mr-2 text-primary" />
+            ) : (
+              <Copy className="w-3 h-3 mr-2" />
+            )}
+            {copied ? "Copied!" : "Copy JSON"}
           </Button>
-          <Button variant="outline" size="sm" className="rounded-none font-mono text-[10px] uppercase tracking-widest h-10 px-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            className="rounded-none font-mono text-[10px] uppercase tracking-widest h-10 px-6 transition-all duration-300"
+          >
             <Download className="w-3 h-3 mr-2" />
             Export Spec
           </Button>
         </div>
       </div>
 
-      {!results.length ? (
+      {!hasData ? (
         <div className="p-12 border border-dashed border-border flex flex-col items-center justify-center bg-card/5">
           <Box className="w-8 h-8 text-muted-foreground/30 mb-4" />
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">No artefacts generated. Initialize intake analysis to begin.</p>
@@ -62,7 +116,7 @@ export default function ArtefactsPage() {
                 {JSON.stringify(combinedData, null, 2)}
               </pre>
             </div>
-            
+
             {/* Corner Accents */}
             <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-primary/20" />
             <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-primary/20" />

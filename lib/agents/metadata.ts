@@ -7,7 +7,10 @@ export class MetadataAgent extends BaseAgent {
     public async run(documentId: string): Promise<AgentResponse> {
         try {
             // 1. Retrieval
-            const context = await this.getContext("Extract product name, line of business, and version number from this insurance specification.");
+            const context = await this.getContext(
+                documentId,
+                "Extract product name, line of business, and version number from this insurance specification."
+            );
 
             // 2. Extraction
             const prompt = "Identify the Product Name, Line of Business (LOB), and the version or release date of this spec.";

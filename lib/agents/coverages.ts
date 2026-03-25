@@ -7,7 +7,10 @@ export class CoverageAgent extends BaseAgent {
     public async run(documentId: string): Promise<AgentResponse> {
         try {
             // 1. Retrieval
-            const context = await this.getContext("Extract all coverage types, their respective limits, and deductibles from this policy specification.");
+            const context = await this.getContext(
+                documentId,
+                "Extract all coverage types, their respective limits, and deductibles from this policy specification."
+            );
 
             // 2. Extraction
             const prompt = "Identify all coverages listed. For each coverage, extract the Coverage Name, the Limit, and the Deductible or Co-insurance.";

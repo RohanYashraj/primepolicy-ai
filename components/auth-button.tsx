@@ -1,14 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { 
-  SignInButton, 
-  SignUpButton, 
-  UserButton, 
-  SignedIn, 
-  SignedOut 
+import {
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  SignedIn,
+  SignedOut
 } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
-export async function AuthButton({ hideDashboardLink = false }: { hideDashboardLink?: boolean }) {
+export function AuthButton({ hideDashboardLink = false }: { hideDashboardLink?: boolean }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="w-20 h-8 bg-muted animate-pulse" />;
+  }
+
   return (
     <>
       <SignedIn>

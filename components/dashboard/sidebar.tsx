@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  FileUp, 
-  ScanText, 
-  Database, 
-  Puzzle, 
+import {
+  LayoutDashboard,
+  FileUp,
+  ScanText,
+  Database,
+  Puzzle,
   Settings,
   Menu,
   ChevronLeft
@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { name: "Product Intake", href: "/dashboard/intake", icon: FileUp },
-  { name: "Spec Analysis", href: "/dashboard/analysis", icon: ScanText },
   { name: "Structured Artefacts", href: "/dashboard/artefacts", icon: Database },
   { name: "Integrations", href: "/dashboard/integrations", icon: Puzzle },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -55,8 +54,8 @@ export function Sidebar() {
               href={item.href}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-none transition-colors group relative",
-                isActive 
-                  ? "bg-primary/10 text-primary border-l-2 border-primary" 
+                isActive
+                  ? "bg-primary/10 text-primary border-l-2 border-primary"
                   : "text-muted-foreground hover:bg-muted"
               )}
             >
